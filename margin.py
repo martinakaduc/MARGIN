@@ -24,7 +24,8 @@ def encodeGraph(graph):
 
         for i, _ in edge_list:
             if not visited[i]:
-                queue.append(i)
+                if i not in queue:
+                    queue.append(i)
                 levelStr += str(graph[s,i]) + "_" + str(graph[i,i]) + "_"
                 # visited[i] = True
 
@@ -92,6 +93,7 @@ class Graph():
             lattice_i = self.lattice["code"].index(embed["code"])
             if child not in self.lattice["children"][lattice_i]:
                 self.lattice["children"][lattice_i].append(child)
+            return
 
 
         num_edge = np.sum(tempGraph > 0, axis=0)
@@ -266,16 +268,21 @@ class GraphCollection():
             # Find the representative Ri of Gi
             print("FIND REPRESENTATIVE...")
             Ri = self.findRepresentative(Gi)
+            if not Ri:
+                continue
+            print("Represent: ", Gi.lattice["code"][Ri])
 
-            # print(Gi.lattice["code"][Ri])
+            # Append the representative to LF
+            LF.append([Gi.lattice["code"][Ri], Gi.lattice["tree"][Ri]])
+
             # Expand cut
             print("SPANNING...")
             CRi_list = [x for x in Gi.lattice["children"][Ri] if Gi.frequent_lattice[x] == False]
             if CRi_list:
                 LF = self.expandCut(Gi, LF, (CRi_list[0], Ri), [])
+            print("LF: ", LF)
 
             # Merfe MF and LF
-            # print(LF)
             print("MERGING...")
             MF = self.merge(MF, LF)
 

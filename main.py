@@ -1,10 +1,10 @@
 import numpy as np
 
-from margin import Graph, GraphCollection
+from margin import Graph, GraphCollection, encodeGraph
 from utils import *
 
 if __name__ == '__main__':
-    datasets = "mico-demo"
+    datasets = "mico"
     graphs = []
 
     # graph_input = []
@@ -36,11 +36,16 @@ if __name__ == '__main__':
     #        [ 17,   0,   0,   0,   0,  44,   0,  28]]))
 
     graph_input = readGraphs('{}.outx'.format(datasets))
+    # print("Graph 0: ", encodeGraph(graph_input[0]))
+    # print("Graph 1: ", encodeGraph(graph_input[1]))
+    # print("Graph 2: ", encodeGraph(graph_input[2]))
 
     for i, graph_array in enumerate(graph_input):
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
         graphs.append(Graph(graph_array))
 
+    # print(graphs[0].lattice)
+    # plotGraph(graphs[0].lattice["tree"][0])
     graphDB = GraphCollection(graphs, 1.0)
     MF = graphDB.margin()
 
