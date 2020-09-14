@@ -172,23 +172,47 @@ class GraphCollection():
         return is_frequent
 
     def findRepresentative(self, target_graph):
-        for i, subgraph in enumerate(target_graph.lattice["code"]):
-            if self.isFrequent(subgraph):
+        queue = [0]
+        # for i, subgraph in enumerate(target_graph.lattice["code"]):
+        #     if self.isFrequent(subgraph):
+        #         # Found representative
+        #         target_graph.frequent_lattice[i] = True
+        #         return i
+        #     else:
+        #         target_graph.frequent_lattice[i] = False
+        while queue:
+            node = queue.pop(0)
+            for p in target_graph.lattice["parents"][node]:
+                queue.append(p)
+
+            if self.isFrequent(target_graph.lattice["code"][node]):
                 # Found representative
-                target_graph.frequent_lattice[i] = True
-                return i
+                target_graph.frequent_lattice[node] = True
+                return node
             else:
-                target_graph.frequent_lattice[i] = False
+                target_graph.frequent_lattice[node] = False
 
         return -1
 
-    def expandCut(self, Gi, LF, cut, _cut_visited=[]):
+    def expandCut(self, Gi, LF, cut, cut_visited=[], lattice_node_visited=[]):
         C, P = cut
-        cut_visited = copy.deepcopy(_cut_visited)
+        # cut_visited = copy.deepcopy(_cut_visited)
+        # lattice_node_visited = copy.deepcopy(_lattice_node_visited)
+
         cut_visited.append(cut)
+        if C not in lattice_node_visited:
+            lattice_node_visited.append(C)
+        if P not in lattice_node_visited:
+            lattice_node_visited.append(P)
+
         Y_list = Gi.lattice["parents"][C] # Index of C parrents in graph.lattice
 
         for Yi in Y_list:
+            if Yi in lattice_node_visited:
+                continue
+            else:
+                lattice_node_visited.append(Yi)
+
             # Check Yi is frequent
             is_frequent = self.checkGraphLatticeFrequent(Gi, Yi)
             # print(Gi.lattice["code"][Yi])
@@ -211,12 +235,12 @@ class GraphCollection():
                         # print(M_list[0])
                         for M in M_list:
                             if (M, K) not in cut_visited:
-                                LF, cut_visited = self.expandCut(Gi, LF, (M_list[0], K), cut_visited)
+                                LF = self.expandCut(Gi, LF, (M_list[0], K), cut_visited, lattice_node_visited)
                                 break
 
                     else: # K is infrequent
                         if (K, Yi) not in cut_visited:
-                            LF, cut_visited = self.expandCut(Gi, LF, (K, Yi), cut_visited)
+                            LF = self.expandCut(Gi, LF, (K, Yi), cut_visited, lattice_node_visited)
 
             else:  # Yi is infrequent
                 Y_parents = Gi.lattice["parents"][Yi]
@@ -224,10 +248,10 @@ class GraphCollection():
                     if self.checkGraphLatticeFrequent(Gi, Y_p) and (Yi, Y_p) not in cut_visited:
                         # print(Gi.lattice["code"][Y_p])
                         # print(Gi.lattice["code"][Yi])
-                        LF, cut_visited = self.expandCut(Gi, LF, (Yi, Y_p), cut_visited)
+                        LF = self.expandCut(Gi, LF, (Yi, Y_p), cut_visited, lattice_node_visited)
                         break
 
-        return LF, cut_visited
+        return LF
 
 
     def merge(self, MF, LF):
@@ -236,10 +260,11 @@ class GraphCollection():
             if length_list:
                 max_len = max(length_list)
                 # Filter only the longest subgraph
-                return {"tree": [x[1] for x in LF if len(x[0]) == max_len],
-                        "code": [x[0] for x in LF if len(x[0]) == max_len]}
-            else:
-                return MF
+                for x in LF:
+                    if len(x[0]) == max_len:
+                        if x[0] not in MF["code"]:
+                            MF["tree"].append(x[1])
+                            MF["code"].append(x[0])
 
         else:
             max_len_MF = len(MF["code"][0])
@@ -247,17 +272,20 @@ class GraphCollection():
             length_list = [len(x[0]) for x in LF]
             max_len_LF = max(length_list)
             # Decide what to remove & what is the maximum subgraphs
-            if max_len_MF > max_len_LF:
-                return MF
-            elif max_len_MF < max_len_LF:
-                return {"tree": [x[1] for x in LF if len(x[0]) == max_len],
-                        "code": [x[0] for x in LF if len(x[0]) == max_len]}
-            else:
+            if max_len_MF < max_len_LF:
+                for x in LF:
+                    if len(x[0]) == max_len:
+                        if x[0] not in MF["code"]:
+                            MF["tree"].append(x[1])
+                            MF["code"].append(x[0])
+
+            elif max_len_MF == max_len_LF:
                 for co, tr in LF:
                     if co not in MF["code"] and len(co) == max_len_MF:
                         MF["tree"].append(tr)
                         MF["code"].append(co)
-                return MF
+
+        return MF
 
     def margin(self):
         MF = {"tree": [], "code": []}
@@ -280,7 +308,7 @@ class GraphCollection():
             print("SPANNING...")
             CRi_list = [x for x in Gi.lattice["children"][Ri] if Gi.frequent_lattice[x] == False]
             if CRi_list:
-                LF, _ = self.expandCut(Gi, LF, (CRi_list[0], Ri), [])
+                LF = self.expandCut(Gi, LF, (CRi_list[0], Ri))
             print("LF: ", LF)
 
             # Merfe MF and LF

@@ -36,9 +36,9 @@ if __name__ == '__main__':
            [ 17,   48,   0,   0,   0,  44,   0,  28]]))
 
     # graph_input = readGraphs('{}.outx'.format(datasets))
-    print("Graph 0: ", encodeGraph(graph_input[0]))
-    print("Graph 1: ", encodeGraph(graph_input[1]))
-    print("Graph 2: ", encodeGraph(graph_input[2]))
+    # print("Graph 0: ", encodeGraph(graph_input[0]))
+    # print("Graph 1: ", encodeGraph(graph_input[1]))
+    # print("Graph 2: ", encodeGraph(graph_input[2]))
 
     for i, graph_array in enumerate(graph_input):
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
