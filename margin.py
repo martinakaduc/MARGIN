@@ -235,7 +235,7 @@ class GraphCollection():
                         # print(M_list[0])
                         for M in M_list:
                             if (M, K) not in cut_visited:
-                                LF = self.expandCut(Gi, LF, (M_list[0], K), cut_visited, lattice_node_visited)
+                                LF = self.expandCut(Gi, LF, (M, K), cut_visited, lattice_node_visited)
                                 break
 
                     else: # K is infrequent
