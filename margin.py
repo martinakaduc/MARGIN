@@ -143,7 +143,7 @@ class Graph():
 class GraphCollection():
     def __init__(self, graphs_, theta_):
         self.graphs = graphs_
-        self.theta = theta_ * len(graphs_)
+        self.theta = int(theta_ * len(graphs_))
         self.length = len(graphs_)
 
     def sigma(self, subgraph, graph):
@@ -180,10 +180,11 @@ class GraphCollection():
             else:
                 target_graph.frequent_lattice[i] = False
 
-        return None
+        return -1
 
-    def expandCut(self, Gi, LF, cut, cut_visited=[]):
+    def expandCut(self, Gi, LF, cut, _cut_visited=[]):
         C, P = cut
+        cut_visited = copy.deepcopy(_cut_visited)
         cut_visited.append(cut)
         Y_list = Gi.lattice["parents"][C] # Index of C parrents in graph.lattice
 
@@ -210,12 +211,12 @@ class GraphCollection():
                         # print(M_list[0])
                         for M in M_list:
                             if (M, K) not in cut_visited:
-                                LF = self.expandCut(Gi, LF, (M_list[0], K), cut_visited)
+                                LF, cut_visited = self.expandCut(Gi, LF, (M_list[0], K), cut_visited)
                                 break
 
                     else: # K is infrequent
                         if (K, Yi) not in cut_visited:
-                            LF = self.expandCut(Gi, LF, (K, Yi), cut_visited)
+                            LF, cut_visited = self.expandCut(Gi, LF, (K, Yi), cut_visited)
 
             else:  # Yi is infrequent
                 Y_parents = Gi.lattice["parents"][Yi]
@@ -223,10 +224,10 @@ class GraphCollection():
                     if self.checkGraphLatticeFrequent(Gi, Y_p) and (Yi, Y_p) not in cut_visited:
                         # print(Gi.lattice["code"][Y_p])
                         # print(Gi.lattice["code"][Yi])
-                        LF = self.expandCut(Gi, LF, (Yi, Y_p), cut_visited)
+                        LF, cut_visited = self.expandCut(Gi, LF, (Yi, Y_p), cut_visited)
                         break
 
-        return LF
+        return LF, cut_visited
 
 
     def merge(self, MF, LF):
@@ -268,7 +269,7 @@ class GraphCollection():
             # Find the representative Ri of Gi
             print("FIND REPRESENTATIVE...")
             Ri = self.findRepresentative(Gi)
-            if not Ri:
+            if Ri == -1:
                 continue
             print("Represent: ", Gi.lattice["code"][Ri])
 
@@ -279,7 +280,7 @@ class GraphCollection():
             print("SPANNING...")
             CRi_list = [x for x in Gi.lattice["children"][Ri] if Gi.frequent_lattice[x] == False]
             if CRi_list:
-                LF = self.expandCut(Gi, LF, (CRi_list[0], Ri), [])
+                LF, _ = self.expandCut(Gi, LF, (CRi_list[0], Ri), [])
             print("LF: ", LF)
 
             # Merfe MF and LF
