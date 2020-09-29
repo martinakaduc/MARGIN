@@ -18,13 +18,9 @@ def generate(num_of_graphs, min_node, max_node, subgraph_size, edge_fill=0.75):
 
     subgraph_total_edge = sum(range(subgraph_size))
 
-    x = 0
     for _ in range(int(edge_fill*subgraph_total_edge)):
-        x = (x+1) % subgraph_size
-        y = random.randint(x, subgraph_size-1)
-
-        while subgraph[x][y] != 0:
-            y = random.randint(0, subgraph_size-1)
+        y, x = np.where(subgraph == 0)
+        y, x = random.choice(list(zip(y, x)))
 
         edge_val = random.randint(1, 500)
         subgraph[x][y] = edge_val
@@ -51,13 +47,10 @@ def generate(num_of_graphs, min_node, max_node, subgraph_size, edge_fill=0.75):
             graph[k][k] = node_val
 
         graph_total_edge = sum(range(length))
-        x = subgraph_size
 
         for _ in range(int(edge_fill*(graph_total_edge-subgraph_total_edge))):
-            y = random.randint(0, x-1)
-
-            while graph[x][y] != 0:
-                y = random.randint(0, length-1)
+            y, x = np.where(graph == 0)
+            y, x = random.choice(list(zip(y, x)))
 
             edge_val = random.randint(1, 500)
             graph[x][y] = edge_val
