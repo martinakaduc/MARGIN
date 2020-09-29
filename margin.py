@@ -62,19 +62,20 @@ def isGraphConnected(_graph):
     return len(visited) == len(graph)
 
 class Graph():
-    def __init__(self, graph_):
+    def __init__(self, graph_, min_subgraph=2):
         self.data = np.array(graph_)
         self.lattice = {"tree": [], "code": [], "children": [], "parents": []}
-        self.generateLatticeSpace(self.data) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
+        self.generateLatticeSpace(self.data, min_subgraph=min_subgraph) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
+        self.writeParrents()
         self.frequent_lattice = [-1] * len(self.lattice["tree"])
 
-    def generateLatticeSpace(self, graph_, child=-1):
+    def generateLatticeSpace(self, graph_, min_subgraph=2, child=-1):
         # Generate all subgraphs
         # Return: {"tree": [list of subgraph], "code"["list of subgraph embed"],
         #          "children": [list of children index], "parents": [list of parrent index]}
         # List in decrease order
         # TODO
-        if graph_.shape[0] == 0:
+        if graph_.shape[0] < min_subgraph:
             return
 
         tempGraph = copy.deepcopy(graph_)
@@ -127,10 +128,11 @@ class Graph():
                             drop_success = True
 
                 if drop_success:
-                    self.generateLatticeSpace(graph_=dropGraph, child=self.lattice["code"].index(embed["code"]))
+                    self.generateLatticeSpace(graph_=dropGraph, min_subgraph=min_subgraph, child=self.lattice["code"].index(embed["code"]))
 
             traverse_order -= 1
 
+    def writeParrents(self):
         # Write parents from children
         for i, children in enumerate(self.lattice["children"]):
             for child_i in children:
@@ -172,6 +174,9 @@ class GraphCollection():
         return is_frequent
 
     def findRepresentative(self, target_graph):
+        if len(target_graph.lattice["parents"]) == 0:
+            return -1
+
         queue = [0]
         # for i, subgraph in enumerate(target_graph.lattice["code"]):
         #     if self.isFrequent(subgraph):
@@ -180,10 +185,17 @@ class GraphCollection():
         #         return i
         #     else:
         #         target_graph.frequent_lattice[i] = False
+        visited = []
         while queue:
             node = queue.pop(0)
+            if node not in visited:
+                visited.append(node)
+            else:
+                continue
+
             for p in target_graph.lattice["parents"][node]:
-                queue.append(p)
+                if p not in visited:
+                    queue.append(p)
 
             if self.isFrequent(target_graph.lattice["code"][node]):
                 # Found representative
