@@ -4,8 +4,9 @@ from margin import Graph, GraphCollection, encodeGraph
 from utils import *
 
 if __name__ == '__main__':
-    datasets = "mico"
-    min_subgraph = 2
+    datasets = "8graphs_2pattern15nodes.lg"
+    min_subgraph = 17 # Số node của frequent subgraph
+    min_support = 0.4
     graphs = []
 
     # graph_input = []
@@ -36,11 +37,11 @@ if __name__ == '__main__':
     #        [ 58,  98,   0,   0,   0,   0,  14,   0],
     #        [ 17,   48,   21,   0,   0,  44,   0,  28]]))
 
-    # graph_input = readGraphs('{}.outx'.format(datasets))
-    graph_input, _ = generate(num_of_graphs=3, min_node=5, max_node=7, subgraph_size=4, edge_fill=0.6)
-    plotGraph(graph_input[0], False)
-    plotGraph(graph_input[1], False)
-    plotGraph(graph_input[2], False)
+    graph_input = readGraphs(datasets)
+    # graph_input, _ = generate(num_of_graphs=3, min_node=5, max_node=7, subgraph_size=4, edge_fill=0.6)
+    # plotGraph(graph_input[0], False)
+    # plotGraph(graph_input[1], False)
+    # plotGraph(graph_input[2], False)
 
     # print("Graph 0: ", encodeGraph(graph_input[0]))
     # print("Graph 1: ", encodeGraph(graph_input[1]))
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     # print(graphs[0].lattice["code"])
     # print(graphs[1].lattice["code"])
     # print(graphs[2].lattice["code"])
-    graphDB = GraphCollection(graphs, 1.0)
+    graphDB = GraphCollection(graphs, min_support)
     MF = graphDB.margin()
 
     print(MF)

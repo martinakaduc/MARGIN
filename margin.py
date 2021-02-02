@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import collections
 
 def encodeGraph(graph):
     visited = [False]*len(graph)
@@ -75,14 +76,19 @@ class Graph():
         #          "children": [list of children index], "parents": [list of parrent index]}
         # List in decrease order
         # TODO
+        # print(graph_.shape[0])
+        # num_edge = (np.sum(graph_ > 0) - graph_.shape[0]) / 2
+        # print(num_edge)
         if graph_.shape[0] < min_subgraph:
             return
 
-        tempGraph = copy.deepcopy(graph_)
+        tempGraph = graph_
 
         # Add current node (subgraph) to lattice space
         embed = embedGraph(tempGraph)
+        # print(embed["code"])
         if embed["code"] not in self.lattice["code"]:
+            # print("HERE")
             self.lattice["tree"].append(embed["tree"])
             self.lattice["code"].append(embed["code"])
             if child == -1:
@@ -128,7 +134,13 @@ class Graph():
                             drop_success = True
 
                 if drop_success:
-                    self.generateLatticeSpace(graph_=dropGraph, min_subgraph=min_subgraph, child=self.lattice["code"].index(embed["code"]))
+                    # cur_freq = GraphCollection.checkFreq(embed["code"])
+                    # if meet_freq and cur_freq:
+                    #     continue
+
+                    self.generateLatticeSpace(graph_=dropGraph,
+                                              min_subgraph=min_subgraph,
+                                              child=self.lattice["code"].index(embed["code"]))
 
             traverse_order -= 1
 
@@ -142,11 +154,57 @@ class Graph():
     def haveSubgraph(self, subgraph):
         return subgraph in self.lattice["code"]
 
+    def set_freq_edge(vid1, vid2, freq):
+        pass
+
 class GraphCollection():
     def __init__(self, graphs_, theta_):
         self.graphs = graphs_
         self.theta = int(theta_ * len(graphs_))
         self.length = len(graphs_)
+        # self._frequent_edges  = []
+        # self.findFreqEdges()
+        # print(self._frequent_edges)
+
+    def findFreqEdges(self):
+        vevlb_counter = collections.Counter()
+        vevlb_counted = set()
+        vevlb_dict = dict()
+
+        for gid, g in enumerate(self.graphs):
+            for vid1 in range(g.data.shape[0]):
+                list_to = np.where(g.data[vid1, vid1+1:] > 0)[0] + vid1 + 1
+                for vid2 in list_to:
+                    vlb1, vlb2 = g.data[vid1][vid1], g.data[vid2][vid2]
+                    elb = g.data[vid1][vid2]
+
+                    if vlb1 < vlb2:
+                        vlb1, vlb2 = vlb2, vlb1
+                        vid1, vid2 = vid2, vid1
+
+                    if (gid, (vlb1, elb, vlb2)) not in vevlb_counted:
+                        vevlb_counter[(vlb1, elb, vlb2)] += 1
+                    vevlb_counted.add((gid, (vlb1, elb, vlb2)))
+
+                    if (vlb1, elb, vlb2) not in vevlb_dict:
+                        vevlb_dict[(vlb1, elb, vlb2)] = {}
+
+                    if gid not in vevlb_dict[(vlb1, elb, vlb2)]:
+                        vevlb_dict[(vlb1, elb, vlb2)][gid] = []
+
+                    if [vid1, vid2] not in vevlb_dict[(vlb1, elb, vlb2)][gid] and [vid2, vid1] not in vevlb_dict[(vlb1, elb, vlb2)][gid]:
+                        vevlb_dict[(vlb1, elb, vlb2)][gid].append([vid1, vid2])
+
+        self._frequent_edges = vevlb_dict
+
+        for vevlb, cnt in vevlb_counter.items():
+            if cnt >= self._min_support:
+                # Mark edge as frequent
+                for gid, g in enumerate(self.graphs):
+                    if gid in vevlb_dict[vevlb]:
+                        for pair in vevlb_dict[vevlb][gid]:
+                            self.graphs[gid].set_freq_edge(pair[0], pair[1], list(vevlb_dict[vevlb].keys()))
+
 
     def sigma(self, subgraph, graph):
         return graph.haveSubgraph(subgraph)
