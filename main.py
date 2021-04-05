@@ -2,11 +2,29 @@ import numpy as np
 from generate_graph import generate
 from margin import Graph, GraphCollection, encodeGraph
 from utils import *
+import argparse
 
 if __name__ == '__main__':
-    datasets = "8graphs_2pattern15nodes.lg"
-    min_subgraph = 17 # Số node của frequent subgraph
-    min_support = 0.4
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-s', '--min_support',
+        type=int,
+        default=5000,
+        help='min support, default 5000'
+    )
+    parser.add_argument(
+        '-e', '--min_edge',
+        type=int,
+        default=10,
+        help='min edge, default 10'
+    )
+    parser.add_argument(
+        'database_file_name',
+        type=str,
+        help='str, database file name'
+    )
+
+    args = parser.parse_args()
     graphs = []
 
     # graph_input = []
@@ -37,7 +55,7 @@ if __name__ == '__main__':
     #        [ 58,  98,   0,   0,   0,   0,  14,   0],
     #        [ 17,   48,   21,   0,   0,  44,   0,  28]]))
 
-    graph_input = readGraphs(datasets)
+    graph_input = readGraphs(args.database_file_name)
     # graph_input, _ = generate(num_of_graphs=3, min_node=5, max_node=7, subgraph_size=4, edge_fill=0.6)
     # plotGraph(graph_input[0], False)
     # plotGraph(graph_input[1], False)
@@ -50,15 +68,15 @@ if __name__ == '__main__':
     for i, graph_array in enumerate(graph_input):
         print(graph_array)
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
-        graphs.append(Graph(graph_array, min_subgraph=min_subgraph))
+        graphs.append(Graph(graph_array, min_edge=args.min_edge))
         print("Graph %d has lattice space length %d." % (i, len(graphs[i].lattice["code"])))
 
     # print(graphs[0].lattice["code"])
     # print(graphs[1].lattice["code"])
     # print(graphs[2].lattice["code"])
-    graphDB = GraphCollection(graphs, min_support)
+    graphDB = GraphCollection(graphs, args.min_support)
     MF = graphDB.margin()
 
     print(MF)
-    for sg in MF["tree"]:
-        plotGraph(sg, False)
+    # for sg in MF["tree"]:
+    #     plotGraph(sg, False)

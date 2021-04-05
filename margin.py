@@ -63,14 +63,14 @@ def isGraphConnected(_graph):
     return len(visited) == len(graph)
 
 class Graph():
-    def __init__(self, graph_, min_subgraph=2):
+    def __init__(self, graph_, min_edge=2):
         self.data = np.array(graph_)
         self.lattice = {"tree": [], "code": [], "children": [], "parents": []}
-        self.generateLatticeSpace(self.data, min_subgraph=min_subgraph) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
+        self.generateLatticeSpace(self.data, min_edge=min_edge) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
         self.writeParrents()
         self.frequent_lattice = [-1] * len(self.lattice["tree"])
 
-    def generateLatticeSpace(self, graph_, min_subgraph=2, child=-1):
+    def generateLatticeSpace(self, graph_, min_edge=2, child=-1):
         # Generate all subgraphs
         # Return: {"tree": [list of subgraph], "code"["list of subgraph embed"],
         #          "children": [list of children index], "parents": [list of parrent index]}
@@ -79,8 +79,6 @@ class Graph():
         # print(graph_.shape[0])
         # num_edge = (np.sum(graph_ > 0) - graph_.shape[0]) / 2
         # print(num_edge)
-        if graph_.shape[0] < min_subgraph:
-            return
 
         tempGraph = graph_
 
@@ -102,13 +100,16 @@ class Graph():
                 self.lattice["children"][lattice_i].append(child)
             return
 
+        if (np.sum(tempGraph > 0) - tempGraph.shape[0]) / 2 <= min_edge:
+            return
 
         num_edge = np.sum(tempGraph > 0, axis=0)
-        traverse_order = np.argsort(num_edge)
+        traverse_order = np.argsort(num_edge).tolist()[::-1]
+        # print(traverse_order)
 
-        while np.sum(traverse_order > 0) > 0:
+        while traverse_order:
             # Find the most-edge node
-            node_i = np.where(traverse_order==0)[0][0]
+            node_i = traverse_order.pop()
             # Drop an edge and ensure the remaining graph is connected
             for edge_i in range(tempGraph.shape[0]):
                 if edge_i == node_i and tempGraph.shape[0] > 1:
@@ -139,10 +140,9 @@ class Graph():
                     #     continue
 
                     self.generateLatticeSpace(graph_=dropGraph,
-                                              min_subgraph=min_subgraph,
+                                              min_edge=min_edge,
                                               child=self.lattice["code"].index(embed["code"]))
 
-            traverse_order -= 1
 
     def writeParrents(self):
         # Write parents from children
@@ -160,7 +160,7 @@ class Graph():
 class GraphCollection():
     def __init__(self, graphs_, theta_):
         self.graphs = graphs_
-        self.theta = int(theta_ * len(graphs_))
+        self.theta = theta_
         self.length = len(graphs_)
         # self._frequent_edges  = []
         # self.findFreqEdges()
@@ -344,7 +344,7 @@ class GraphCollection():
             # Decide what to remove & what is the maximum subgraphs
             if max_len_MF < max_len_LF:
                 for x in LF:
-                    if len(x[0]) == max_len:
+                    if len(x[0]) == max_len_LF:
                         if x[0] not in MF["code"]:
                             MF["tree"].append(x[1])
                             MF["code"].append(x[0])

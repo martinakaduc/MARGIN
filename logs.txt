@@ -1,0 +1,61 @@
+[[ 3  1  2  0]
+ [ 1  8  3  0]
+ [ 2  3  1  4]
+ [ 0  0  4 20]]
+CONSTRUCTING LATTICE SEARCH SPACE... Graph 0
+Graph 0 has lattice space length 5.
+[[ 3  1  0  2]
+ [ 1  8  4  3]
+ [ 0  4 27  0]
+ [ 2  3  0  1]]
+CONSTRUCTING LATTICE SEARCH SPACE... Graph 1
+Graph 1 has lattice space length 5.
+[[ 3  1  2  0  0]
+ [ 1  8  3  0  0]
+ [ 2  3  1  8 10]
+ [ 0  0  8 27  0]
+ [ 0  0 10  0 38]]
+CONSTRUCTING LATTICE SEARCH SPACE... Graph 2
+Graph 2 has lattice space length 15.
+[[ 5 17  0  0  0]
+ [17  3  1  2  0]
+ [ 0  1  8  3  0]
+ [ 0  2  3  1 10]
+ [ 0  0  0 10  7]]
+CONSTRUCTING LATTICE SEARCH SPACE... Graph 3
+Graph 3 has lattice space length 14.
+RUNNING GRAPH NO. 0
+FIND REPRESENTATIVE...
+Represent:  8$1_3_3_1$2_1$#
+SPANNING...
+LF:  [['8$1_3_3_1$2_1$#', array([[3, 1, 2],
+       [1, 8, 3],
+       [2, 3, 1]])]]
+MERGING...
+RUNNING GRAPH NO. 1
+FIND REPRESENTATIVE...
+Represent:  8$1_3_3_1$2_1$#
+SPANNING...
+LF:  [['8$1_3_3_1$2_1$#', array([[3, 1, 2],
+       [1, 8, 3],
+       [2, 3, 1]])]]
+MERGING...
+RUNNING GRAPH NO. 2
+FIND REPRESENTATIVE...
+Represent:  8$1_3_3_1$2_1$#
+SPANNING...
+LF:  [['8$1_3_3_1$2_1$#', array([[3, 1, 2],
+       [1, 8, 3],
+       [2, 3, 1]])]]
+MERGING...
+RUNNING GRAPH NO. 3
+FIND REPRESENTATIVE...
+Represent:  8$1_3_3_1$2_1$#
+SPANNING...
+LF:  [['8$1_3_3_1$2_1$#', array([[3, 1, 2],
+       [1, 8, 3],
+       [2, 3, 1]])]]
+MERGING...
+{'tree': [array([[3, 1, 2],
+       [1, 8, 3],
+       [2, 3, 1]])], 'code': ['8$1_3_3_1$2_1$#']}
