@@ -3,7 +3,7 @@ import random
 from utils import plotGraph
 
 def generate(num_of_graphs, min_node, max_node, subgraph_size, node_degree=3, label_ratio=0.5,
-            random_node=True, random_edge=True, plotSG=True):
+            random_node=True, random_edge=True, plotSG=False):
     graph_db = []
     graph_index = []
     subgraph = np.zeros((subgraph_size, subgraph_size), dtype=np.int)
@@ -94,7 +94,7 @@ def generate(num_of_graphs, min_node, max_node, subgraph_size, node_degree=3, la
     return np.asarray(graph_db), np.asarray([[link[i], link[(i+1)%num_of_graphs]] for i in range(link.shape[0])])
 
 if __name__ == '__main__':
-    graph_db, _ = generate(num_of_graphs=10, min_node=8, max_node=10, subgraph_size=5)
+    graph_db, _ = generate(num_of_graphs=500, min_node=16, max_node=20, subgraph_size=18, node_degree=3)
     for x in graph_db:
         print(x)
     print(_)
