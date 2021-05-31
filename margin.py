@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import collections
+import uuid
 
 def encodeGraph(graph):
     visited = [False]*len(graph)
@@ -27,6 +28,8 @@ def encodeGraph(graph):
             if not visited[i]:
                 if i not in queue:
                     queue.append(i)
+
+            if s != i:
                 levelStr += str(graph[s,i]) + "_" + str(graph[i,i]) + "_"
                 # visited[i] = True
 
@@ -70,24 +73,18 @@ class Graph():
         self.writeParrents()
         self.frequent_lattice = [-1] * len(self.lattice["tree"])
 
-    def generateLatticeSpace(self, graph_, min_edge=2, child=-1):
+    def generateLatticeSpace(self, tempGraph, min_edge=2, child=-1):
         # Generate all subgraphs
         # Return: {"tree": [list of subgraph], "code"["list of subgraph embed"],
         #          "children": [list of children index], "parents": [list of parrent index]}
         # List in decrease order
         # TODO
-        # print(graph_.shape[0])
-        # num_edge = (np.sum(graph_ > 0) - graph_.shape[0]) / 2
-        # print(num_edge)
-
-        tempGraph = graph_
 
         # Add current node (subgraph) to lattice space
         embed = embedGraph(tempGraph)
         # print(embed["code"])
         if embed["code"] not in self.lattice["code"]:
-            # print("HERE")
-            self.lattice["tree"].append(embed["tree"])
+            self.lattice["tree"].append(embed["tree"].copy())
             self.lattice["code"].append(embed["code"])
             if child == -1:
                 self.lattice["children"].append([])
@@ -119,29 +116,53 @@ class Graph():
                     continue
 
                 drop_success = False
-                dropGraph = copy.deepcopy(tempGraph)
-                dropGraph[node_i][edge_i] = 0
-                dropGraph[edge_i][node_i] = 0
 
-                if isGraphConnected(dropGraph):
+                backup_edge_label = tempGraph[node_i][edge_i]
+                backup_node_index = []
+                backup_node_label = []
+
+                tempGraph[node_i][edge_i] = 0
+                tempGraph[edge_i][node_i] = 0
+
+                if isGraphConnected(tempGraph):
                     drop_success = True
                 else:
-                    for run_i in list(sorted([node_i, edge_i], reverse=True)):
-                        if np.sum(dropGraph[run_i] > 0) <= 1:
-                            # Orphan node =>> need remove
-                            dropGraph = np.delete(dropGraph, run_i, axis=0)
-                            dropGraph = np.delete(dropGraph, run_i, axis=1)
+                    if (np.sum(tempGraph[node_i] > 0) <= 1 and np.sum(tempGraph[edge_i] > 0) > 1) or \
+                       (np.sum(tempGraph[node_i] > 0) > 1 and np.sum(tempGraph[edge_i] > 0) <= 1):
+                        for run_i in list(sorted([node_i, edge_i], reverse=True)):
+                            if np.sum(tempGraph[run_i] > 0) <= 1:
+                                # Orphan node =>> need remove
+                                backup_node_index.append(run_i)
+                                backup_node_label.append(tempGraph[run_i][run_i])
 
-                            drop_success = True
+                                tempGraph = np.delete(tempGraph, run_i, axis=0)
+                                tempGraph = np.delete(tempGraph, run_i, axis=1)
+
+                                drop_success = True
+                                break
 
                 if drop_success:
                     # cur_freq = GraphCollection.checkFreq(embed["code"])
                     # if meet_freq and cur_freq:
                     #     continue
 
-                    self.generateLatticeSpace(graph_=dropGraph,
+                    self.generateLatticeSpace(tempGraph,
                                               min_edge=min_edge,
                                               child=self.lattice["code"].index(embed["code"]))
+
+                if len(backup_node_index) > 1:
+                    print("FUCKKIKIVJJOIRJCVOIJRNEO %d" % len(backup_node_index))
+
+                while len(backup_node_index) > 0:
+                    ni = backup_node_index.pop()
+                    nl = backup_node_label.pop()
+                    tempGraph = np.insert(tempGraph, ni, 0, axis=1)
+                    tempGraph = np.insert(tempGraph, ni, 0, axis=0)
+                    tempGraph[ni][ni] = nl
+
+
+                tempGraph[node_i][edge_i] = backup_edge_label
+                tempGraph[edge_i][node_i] = backup_edge_label
 
 
     def writeParrents(self):

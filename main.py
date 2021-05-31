@@ -16,8 +16,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '-e', '--min_edge',
         type=int,
-        default=10,
-        help='min edge, default 10'
+        default=1,
+        help='min edge, default 1'
     )
     parser.add_argument(
         'database_file_name',
@@ -41,5 +41,8 @@ if __name__ == '__main__':
 
     print(MF)
     print("RUNNING TIME: %.5f s"%(time.time() - start_time))
+
+    # max_pattern = max(len(x) for x in MF["tree"])
+    # print(max_pattern)
     # for sg in MF["tree"]:
     #     plotGraph(sg, False)
