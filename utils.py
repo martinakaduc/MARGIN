@@ -4,7 +4,6 @@ import os
 import networkx as nx
 import matplotlib.pyplot as plt
 
-
 def read_graph_corpus(path, label_center_path=None):
     graphs = []
     # label_center = open(label_center_path, 'r', encoding='utf-8')

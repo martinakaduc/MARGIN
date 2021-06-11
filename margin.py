@@ -150,8 +150,8 @@ class Graph():
                                               min_edge=min_edge,
                                               child=self.lattice["code"].index(embed["code"]))
 
-                if len(backup_node_index) > 1:
-                    print("FUCKKIKIVJJOIRJCVOIJRNEO %d" % len(backup_node_index))
+                # if len(backup_node_index) > 1:
+                #     print("FUCKKIKIVJJOIRJCVOIJRNEO %d" % len(backup_node_index))
 
                 while len(backup_node_index) > 0:
                     ni = backup_node_index.pop()
