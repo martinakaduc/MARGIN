@@ -285,7 +285,7 @@ class GraphCollection():
 
         return -1
 
-    def expandCut(self, Gi, LF, cut, cut_visited=[], lattice_node_visited=[]):
+    def expandCut(self, gid, Gi, LF, cut, cut_visited=[], lattice_node_visited=[]):
         C, P = cut
         # cut_visited = copy.deepcopy(_cut_visited)
         # lattice_node_visited = copy.deepcopy(_lattice_node_visited)
@@ -309,7 +309,7 @@ class GraphCollection():
             # print(Gi.lattice["code"][Yi])
             # print(self.checkGraphLatticeFrequent(Gi, Yi))
             if is_frequent:
-                LF.append([Gi.lattice["code"][Yi], Gi.lattice["tree"][Yi]])
+                LF.append([Gi.lattice["code"][Yi], Gi.lattice["tree"][Yi], gid])
                 Y_child = Gi.lattice["children"][Yi]
                 for K in Y_child:
                     # print(K, C)
@@ -326,12 +326,12 @@ class GraphCollection():
                         # print(M_list[0])
                         for M in M_list:
                             if (M, K) not in cut_visited:
-                                LF = self.expandCut(Gi, LF, (M, K), cut_visited, lattice_node_visited)
+                                LF = self.expandCut(gid, Gi, LF, (M, K), cut_visited, lattice_node_visited)
                                 break
 
                     else: # K is infrequent
                         if (K, Yi) not in cut_visited:
-                            LF = self.expandCut(Gi, LF, (K, Yi), cut_visited, lattice_node_visited)
+                            LF = self.expandCut(gid, Gi, LF, (K, Yi), cut_visited, lattice_node_visited)
 
             else:  # Yi is infrequent
                 Y_parents = Gi.lattice["parents"][Yi]
@@ -339,7 +339,7 @@ class GraphCollection():
                     if self.checkGraphLatticeFrequent(Gi, Y_p) and (Yi, Y_p) not in cut_visited:
                         # print(Gi.lattice["code"][Y_p])
                         # print(Gi.lattice["code"][Yi])
-                        LF = self.expandCut(Gi, LF, (Yi, Y_p), cut_visited, lattice_node_visited)
+                        LF = self.expandCut(gid, Gi, LF, (Yi, Y_p), cut_visited, lattice_node_visited)
                         break
 
         return LF
@@ -356,6 +356,7 @@ class GraphCollection():
                         if x[0] not in MF["code"]:
                             MF["tree"].append(x[1])
                             MF["code"].append(x[0])
+                            MF["freq"].append([x[2]])
 
         else:
             max_len_MF = len(MF["code"][0])
@@ -369,17 +370,21 @@ class GraphCollection():
                         if x[0] not in MF["code"]:
                             MF["tree"].append(x[1])
                             MF["code"].append(x[0])
+                            MF["freq"].append([x[2]])
 
             elif max_len_MF == max_len_LF:
-                for co, tr in LF:
+                for co, tr, fe in LF:
                     if co not in MF["code"] and len(co) == max_len_MF:
                         MF["tree"].append(tr)
                         MF["code"].append(co)
+                    elif co in MF["code"]:
+                        index = MF["code"].index(co)
+                        MF["freq"][index].append(fe)
 
         return MF
 
     def margin(self):
-        MF = {"tree": [], "code": []}
+        MF = {"tree": [], "code": [], "freq": []}
 
         for i, Gi in enumerate(self.graphs):
             print("RUNNING GRAPH NO. %d" % i)
@@ -393,17 +398,20 @@ class GraphCollection():
             print("Represent: ", Gi.lattice["code"][Ri])
 
             # Append the representative to LF
-            LF.append([Gi.lattice["code"][Ri], Gi.lattice["tree"][Ri]])
+            LF.append([Gi.lattice["code"][Ri], Gi.lattice["tree"][Ri], i])
 
             # Expand cut
             print("SPANNING...")
             CRi_list = [x for x in Gi.lattice["children"][Ri] if Gi.frequent_lattice[x] == False]
             if CRi_list:
-                LF = self.expandCut(Gi, LF, (CRi_list[0], Ri))
+                LF = self.expandCut(i, Gi, LF, (CRi_list[0], Ri))
             print("LF: ", LF)
 
             # Merfe MF and LF
             print("MERGING...")
             MF = self.merge(MF, LF)
+
+        for i, freq in enumerate(MF["freq"]):
+            MF["freq"][i] = list(set(freq))
 
         return MF
