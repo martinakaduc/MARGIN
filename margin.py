@@ -359,27 +359,14 @@ class GraphCollection():
                             MF["freq"].append([x[2]])
 
         else:
-            max_len_MF = len(MF["code"][0])
-
-            length_list = [len(x[0]) for x in LF]
-            max_len_LF = max(length_list)
-            # Decide what to remove & what is the maximum subgraphs
-            if max_len_MF < max_len_LF:
-                for x in LF:
-                    if len(x[0]) == max_len_LF:
-                        if x[0] not in MF["code"]:
-                            MF["tree"].append(x[1])
-                            MF["code"].append(x[0])
-                            MF["freq"].append([x[2]])
-
-            elif max_len_MF == max_len_LF:
-                for co, tr, fe in LF:
-                    if co not in MF["code"] and len(co) == max_len_MF:
-                        MF["tree"].append(tr)
-                        MF["code"].append(co)
-                    elif co in MF["code"]:
-                        index = MF["code"].index(co)
-                        MF["freq"][index].append(fe)
+            for co, tr, fe in LF:
+                if co not in MF["code"]:
+                    MF["tree"].append(tr)
+                    MF["code"].append(co)
+                    MF["freq"].append([fe])
+                elif co in MF["code"]:
+                    index = MF["code"].index(co)
+                    MF["freq"][index].append(fe)
 
         return MF
 
@@ -413,5 +400,17 @@ class GraphCollection():
 
         for i, freq in enumerate(MF["freq"]):
             MF["freq"][i] = list(set(freq))
+
+        max_freq = max([len(x) for x in MF["freq"]])
+
+        tobe_del = []
+        for i, freq in enumerate(MF["freq"]):
+            if len(freq) < max_freq:
+                tobe_del.append(i)
+
+        for i in tobe_del[::-1]:
+            del MF["code"][i]
+            del MF["tree"][i]
+            del MF["freq"][i]
 
         return MF

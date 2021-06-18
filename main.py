@@ -39,7 +39,12 @@ if __name__ == '__main__':
     graphDB = GraphCollection(graphs, args.min_support)
     MF = graphDB.margin()
 
-    print(MF)
+    print("RESULT")
+    for i, code in enumerate(MF["code"]):
+        print("Pattern %d" % i)
+        print("Code:", MF["code"][i])
+        print("Support:", MF["freq"][i])
+
     print("RUNNING TIME: %.5f s"%(time.time() - start_time))
 
     # max_pattern = max(len(x) for x in MF["tree"])
