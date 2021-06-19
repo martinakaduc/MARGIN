@@ -401,16 +401,16 @@ class GraphCollection():
         for i, freq in enumerate(MF["freq"]):
             MF["freq"][i] = list(set(freq))
 
-        max_freq = max([len(x) for x in MF["freq"]])
-
-        tobe_del = []
-        for i, freq in enumerate(MF["freq"]):
-            if len(freq) < max_freq:
-                tobe_del.append(i)
-
-        for i in tobe_del[::-1]:
-            del MF["code"][i]
-            del MF["tree"][i]
-            del MF["freq"][i]
+        # max_freq = max([len(x) for x in MF["freq"]])
+        #
+        # tobe_del = []
+        # for i, freq in enumerate(MF["freq"]):
+        #     if len(freq) < max_freq:
+        #         tobe_del.append(i)
+        #
+        # for i in tobe_del[::-1]:
+        #     del MF["code"][i]
+        #     del MF["tree"][i]
+        #     del MF["freq"][i]
 
         return MF
