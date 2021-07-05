@@ -66,14 +66,17 @@ def isGraphConnected(_graph):
     return len(visited) == len(graph)
 
 class Graph():
-    def __init__(self, graph_, min_edge=2):
+    def __init__(self, graph_, min_edge=2, max_size=35):
+        self.min_edge = min_edge
+        self.max_size=max_size
         self.data = np.array(graph_)
         self.lattice = {"tree": [], "code": [], "children": [], "parents": []}
-        self.generateLatticeSpace(self.data, min_edge=min_edge) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
-        self.writeParrents()
+        if self.data.shape[0] <= self.max_size:
+            self.generateLatticeSpace(self.data) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
+            self.writeParrents()
         self.frequent_lattice = [-1] * len(self.lattice["tree"])
 
-    def generateLatticeSpace(self, tempGraph, min_edge=2, child=-1):
+    def generateLatticeSpace(self, tempGraph, child=-1):
         # Generate all subgraphs
         # Return: {"tree": [list of subgraph], "code"["list of subgraph embed"],
         #          "children": [list of children index], "parents": [list of parrent index]}
@@ -97,7 +100,7 @@ class Graph():
                 self.lattice["children"][lattice_i].append(child)
             return
 
-        if (np.sum(tempGraph > 0) - tempGraph.shape[0]) / 2 <= min_edge:
+        if (np.sum(tempGraph > 0) - tempGraph.shape[0]) / 2 <= self.min_edge:
             return
 
         num_edge = np.sum(tempGraph > 0, axis=0)
@@ -147,7 +150,6 @@ class Graph():
                     #     continue
 
                     self.generateLatticeSpace(tempGraph,
-                                              min_edge=min_edge,
                                               child=self.lattice["code"].index(embed["code"]))
 
                 # if len(backup_node_index) > 1:
@@ -183,50 +185,7 @@ class GraphCollection():
         self.graphs = graphs_
         self.theta = theta_
         self.length = len(graphs_)
-        # self._frequent_edges  = []
-        # self.findFreqEdges()
-        # print(self._frequent_edges)
-
-    def findFreqEdges(self):
-        vevlb_counter = collections.Counter()
-        vevlb_counted = set()
-        vevlb_dict = dict()
-
-        for gid, g in enumerate(self.graphs):
-            for vid1 in range(g.data.shape[0]):
-                list_to = np.where(g.data[vid1, vid1+1:] > 0)[0] + vid1 + 1
-                for vid2 in list_to:
-                    vlb1, vlb2 = g.data[vid1][vid1], g.data[vid2][vid2]
-                    elb = g.data[vid1][vid2]
-
-                    if vlb1 < vlb2:
-                        vlb1, vlb2 = vlb2, vlb1
-                        vid1, vid2 = vid2, vid1
-
-                    if (gid, (vlb1, elb, vlb2)) not in vevlb_counted:
-                        vevlb_counter[(vlb1, elb, vlb2)] += 1
-                    vevlb_counted.add((gid, (vlb1, elb, vlb2)))
-
-                    if (vlb1, elb, vlb2) not in vevlb_dict:
-                        vevlb_dict[(vlb1, elb, vlb2)] = {}
-
-                    if gid not in vevlb_dict[(vlb1, elb, vlb2)]:
-                        vevlb_dict[(vlb1, elb, vlb2)][gid] = []
-
-                    if [vid1, vid2] not in vevlb_dict[(vlb1, elb, vlb2)][gid] and [vid2, vid1] not in vevlb_dict[(vlb1, elb, vlb2)][gid]:
-                        vevlb_dict[(vlb1, elb, vlb2)][gid].append([vid1, vid2])
-
-        self._frequent_edges = vevlb_dict
-
-        for vevlb, cnt in vevlb_counter.items():
-            if cnt >= self._min_support:
-                # Mark edge as frequent
-                for gid, g in enumerate(self.graphs):
-                    if gid in vevlb_dict[vevlb]:
-                        for pair in vevlb_dict[vevlb][gid]:
-                            self.graphs[gid].set_freq_edge(pair[0], pair[1], list(vevlb_dict[vevlb].keys()))
-
-
+        
     def sigma(self, subgraph, graph):
         return graph.haveSubgraph(subgraph)
 
