@@ -69,11 +69,10 @@ class Graph():
     def __init__(self, graph_, min_edge=2, max_size=35):
         self.min_edge = min_edge
         self.max_size=max_size
-        self.data = np.array(graph_)
+        self.data = np.array(graph_)[:self.max_size, :self.max_size]
         self.lattice = {"tree": [], "code": [], "children": [], "parents": []}
-        if self.data.shape[0] <= self.max_size:
-            self.generateLatticeSpace(self.data) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
-            self.writeParrents()
+        self.generateLatticeSpace(self.data) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
+        self.writeParrents()
         self.frequent_lattice = [-1] * len(self.lattice["tree"])
 
     def generateLatticeSpace(self, tempGraph, child=-1):
@@ -185,7 +184,7 @@ class GraphCollection():
         self.graphs = graphs_
         self.theta = theta_
         self.length = len(graphs_)
-        
+
     def sigma(self, subgraph, graph):
         return graph.haveSubgraph(subgraph)
 
