@@ -37,7 +37,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     for i, graph_array in enumerate(graph_input):
-        print(graph_array)
+        # print(graph_array)
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
         graphs.append(Graph(graph_array, min_edge=args.min_edge, max_size=args.max_size))
         print("Graph %d has lattice space length %d." % (i, len(graphs[i].lattice["code"])))

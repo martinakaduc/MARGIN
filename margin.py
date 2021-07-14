@@ -350,7 +350,7 @@ class GraphCollection():
             CRi_list = [x for x in Gi.lattice["children"][Ri] if Gi.frequent_lattice[x] == False]
             if CRi_list:
                 LF = self.expandCut(i, Gi, LF, (CRi_list[0], Ri))
-            print("LF: ", LF)
+            # print("LF: ", LF)
 
             # Merfe MF and LF
             print("MERGING...")
