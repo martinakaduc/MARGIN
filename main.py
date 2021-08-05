@@ -26,6 +26,12 @@ if __name__ == '__main__':
         help='max graph size'
     )
     parser.add_argument(
+        '-t', '--max_time',
+        type=int,
+        default=43200, # 12hrs
+        help='max time (second)'
+    )
+    parser.add_argument(
         'database_file_name',
         type=str,
         help='str, database file name'
@@ -39,17 +45,18 @@ if __name__ == '__main__':
     for i, graph_array in enumerate(graph_input):
         # print(graph_array)
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
-        graphs.append(Graph(graph_array, min_edge=args.min_edge, max_size=args.max_size))
+        graphs.append(Graph(graph_array, min_edge=args.min_edge, max_size=args.max_size, start_time=start_time, max_time=args.max_time))
         print("Graph %d has lattice space length %d." % (i, len(graphs[i].lattice["code"])))
 
-    graphDB = GraphCollection(graphs, args.min_support)
-    MF = graphDB.margin()
+    if time.time() - start_time < args.max_time:
+        graphDB = GraphCollection(graphs, args.min_support)
+        MF = graphDB.margin()
 
-    print("RESULT")
-    for i, code in enumerate(MF["code"]):
-        print("Pattern %d" % i)
-        print("Code:", MF["code"][i])
-        print("Support:", MF["freq"][i])
+        print("RESULT")
+        for i, code in enumerate(MF["code"]):
+            print("Pattern %d" % i)
+            print("Code:", MF["code"][i])
+            print("Support:", MF["freq"][i])
 
     print("RUNNING TIME: %.5f s"%(time.time() - start_time))
 

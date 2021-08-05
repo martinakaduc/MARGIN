@@ -2,6 +2,7 @@ import numpy as np
 import copy
 import collections
 import uuid
+import time
 
 def encodeGraph(graph):
     visited = [False]*len(graph)
@@ -66,9 +67,11 @@ def isGraphConnected(_graph):
     return len(visited) == len(graph)
 
 class Graph():
-    def __init__(self, graph_, min_edge=2, max_size=35):
+    def __init__(self, graph_, min_edge=2, max_size=35, start_time=0, max_time=-1):
         self.min_edge = min_edge
-        self.max_size=max_size
+        self.max_size = max_size
+        self.max_time = max_time
+        self.start_time = start_time
         self.data = np.array(graph_)[:self.max_size, :self.max_size]
         self.lattice = {"tree": [], "code": [], "children": [], "parents": []}
         self.generateLatticeSpace(self.data) # {"tree": [list of subgraph], "code"["list of subgraph embed"]}
@@ -81,6 +84,8 @@ class Graph():
         #          "children": [list of children index], "parents": [list of parrent index]}
         # List in decrease order
         # TODO
+        if time.time() - self.start_time > self.max_time:
+            return
 
         # Add current node (subgraph) to lattice space
         embed = embedGraph(tempGraph)
@@ -190,25 +195,25 @@ class GraphCollection():
 
     def isFrequent(self, subgraph):
         count = 0
-
+        supports = []
+        gid = 0
         for graph in self.graphs:
             if self.sigma(subgraph, graph):
                 count += 1
+                supports.append(gid)
+            gid += 1
 
-        return count >= self.theta
+        return count >= self.theta, supports
 
     def checkGraphLatticeFrequent(self, Gi, index):
+        supports = []
         if Gi.frequent_lattice[index] == -1:
-            if self.isFrequent(Gi.lattice["code"][index]):
-                is_frequent = True
-                Gi.frequent_lattice[index] = True
-            else:
-                is_frequent = False
-                Gi.frequent_lattice[index] = False
+            is_frequent, supports = self.isFrequent(Gi.lattice["code"][index])
+            Gi.frequent_lattice[index] = is_frequent
         else:
             is_frequent = Gi.frequent_lattice[index]
 
-        return is_frequent
+        return is_frequent, supports
 
     def findRepresentative(self, target_graph):
         if len(target_graph.lattice["parents"]) == 0:
@@ -234,14 +239,15 @@ class GraphCollection():
                 if p not in visited:
                     queue.append(p)
 
-            if self.isFrequent(target_graph.lattice["code"][node]):
+            is_rep, supports = self.isFrequent(target_graph.lattice["code"][node])
+            if is_rep:
                 # Found representative
                 target_graph.frequent_lattice[node] = True
-                return node
+                return node, supports
             else:
                 target_graph.frequent_lattice[node] = False
 
-        return -1
+        return -1, None
 
     def expandCut(self, gid, Gi, LF, cut, cut_visited=[], lattice_node_visited=[]):
         C, P = cut
@@ -263,17 +269,17 @@ class GraphCollection():
                 lattice_node_visited.append(Yi)
 
             # Check Yi is frequent
-            is_frequent = self.checkGraphLatticeFrequent(Gi, Yi)
+            is_frequent, supports = self.checkGraphLatticeFrequent(Gi, Yi)
             # print(Gi.lattice["code"][Yi])
             # print(self.checkGraphLatticeFrequent(Gi, Yi))
             if is_frequent:
-                LF.append([Gi.lattice["code"][Yi], Gi.lattice["tree"][Yi], gid])
+                LF.append([Gi.lattice["code"][Yi], Gi.lattice["tree"][Yi], gid, supports])
                 Y_child = Gi.lattice["children"][Yi]
                 for K in Y_child:
                     # print(K, C)
                     if K == C:
                         continue
-                    k_is_frequent = self.checkGraphLatticeFrequent(Gi, K)
+                    k_is_frequent, _ = self.checkGraphLatticeFrequent(Gi, K)
 
                     if k_is_frequent: # K is frequent
                         # Find common child M of C and K
@@ -294,7 +300,7 @@ class GraphCollection():
             else:  # Yi is infrequent
                 Y_parents = Gi.lattice["parents"][Yi]
                 for Y_p in Y_parents:
-                    if self.checkGraphLatticeFrequent(Gi, Y_p) and (Yi, Y_p) not in cut_visited:
+                    if self.checkGraphLatticeFrequent(Gi, Y_p)[0] and (Yi, Y_p) not in cut_visited:
                         # print(Gi.lattice["code"][Y_p])
                         # print(Gi.lattice["code"][Yi])
                         LF = self.expandCut(gid, Gi, LF, (Yi, Y_p), cut_visited, lattice_node_visited)
@@ -305,26 +311,20 @@ class GraphCollection():
 
     def merge(self, MF, LF):
         if len(MF["code"]) == 0:
-            length_list = [len(x[0]) for x in LF]
-            if length_list:
-                max_len = max(length_list)
-                # Filter only the longest subgraph
-                for x in LF:
-                    if len(x[0]) == max_len:
-                        if x[0] not in MF["code"]:
-                            MF["tree"].append(x[1])
-                            MF["code"].append(x[0])
-                            MF["freq"].append([x[2]])
+            for x in LF:
+                MF["tree"].append(x[1])
+                MF["code"].append(x[0])
+                MF["freq"].append(x[3])
 
         else:
-            for co, tr, fe in LF:
+            for co, tr, _, su in LF:
                 if co not in MF["code"]:
                     MF["tree"].append(tr)
                     MF["code"].append(co)
-                    MF["freq"].append([fe])
+                    MF["freq"].append(su)
                 elif co in MF["code"]:
                     index = MF["code"].index(co)
-                    MF["freq"][index].append(fe)
+                    MF["freq"][index] += su
 
         return MF
 
@@ -337,13 +337,13 @@ class GraphCollection():
 
             # Find the representative Ri of Gi
             print("FIND REPRESENTATIVE...")
-            Ri = self.findRepresentative(Gi)
+            Ri, supports = self.findRepresentative(Gi)
             if Ri == -1:
                 continue
             print("Represent: ", Gi.lattice["code"][Ri])
 
             # Append the representative to LF
-            LF.append([Gi.lattice["code"][Ri], Gi.lattice["tree"][Ri], i])
+            LF.append([Gi.lattice["code"][Ri], Gi.lattice["tree"][Ri], i, supports])
 
             # Expand cut
             print("SPANNING...")
