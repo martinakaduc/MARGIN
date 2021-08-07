@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-t', '--max_time',
         type=int,
-        default=43200, # 12hrs
+        default=86400, # 12hrs
         help='max time (second)'
     )
     parser.add_argument(
