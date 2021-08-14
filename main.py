@@ -41,15 +41,17 @@ if __name__ == '__main__':
     graphs = []
     graph_input = readGraphs(args.database_file_name)
     start_time = time.time()
+    total_generated = 0
 
     for i, graph_array in enumerate(graph_input):
         # print(graph_array)
         print("CONSTRUCTING LATTICE SEARCH SPACE... Graph %d" % i)
         graphs.append(Graph(graph_array, min_edge=args.min_edge, max_size=args.max_size, start_time=start_time, max_time=args.max_time))
         print("Graph %d has lattice space length %d." % (i, len(graphs[i].lattice["code"])))
+        total_generated += len(graphs[i].lattice["code"])
 
+    graphDB = GraphCollection(graphs, args.min_support)
     if time.time() - start_time < args.max_time:
-        graphDB = GraphCollection(graphs, args.min_support)
         MF = graphDB.margin()
 
         print("RESULT")
@@ -59,6 +61,8 @@ if __name__ == '__main__':
             print("Support:", MF["freq"][i])
 
     print("RUNNING TIME: %.5f s"%(time.time() - start_time))
+    print("TOTAL GENERATED:", total_generated)
+    print("TOTAL EXPLORED:", graphDB.total_explored)
 
     # max_pattern = max(len(x) for x in MF["tree"])
     # print(max_pattern)

@@ -189,6 +189,7 @@ class GraphCollection():
         self.graphs = graphs_
         self.theta = theta_
         self.length = len(graphs_)
+        self.total_explored = 0
 
     def sigma(self, subgraph, graph):
         return graph.haveSubgraph(subgraph)
@@ -229,6 +230,7 @@ class GraphCollection():
         #         target_graph.frequent_lattice[i] = False
         visited = []
         while queue:
+            self.total_explored += 1
             node = queue.pop(0)
             if node not in visited:
                 visited.append(node)
@@ -250,6 +252,7 @@ class GraphCollection():
         return -1, None
 
     def expandCut(self, gid, Gi, LF, cut, cut_visited=[], lattice_node_visited=[]):
+        self.total_explored += 1
         C, P = cut
         # cut_visited = copy.deepcopy(_cut_visited)
         # lattice_node_visited = copy.deepcopy(_lattice_node_visited)
