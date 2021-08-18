@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     graphDB = GraphCollection(graphs, args.min_support)
     if time.time() - start_time < args.max_time:
-        MF = graphDB.margin()
+        MF = graphDB.margin(start_time, args.max_time)
 
         print("RESULT")
         for i, code in enumerate(MF["code"]):

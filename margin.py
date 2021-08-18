@@ -84,8 +84,6 @@ class Graph():
         #          "children": [list of children index], "parents": [list of parrent index]}
         # List in decrease order
         # TODO
-        if time.time() - self.start_time > self.max_time:
-            return
 
         # Add current node (subgraph) to lattice space
         embed = embedGraph(tempGraph)
@@ -112,6 +110,9 @@ class Graph():
         # print(traverse_order)
 
         while traverse_order:
+            if time.time() - self.start_time > self.max_time:
+                return
+                
             # Find the most-edge node
             node_i = traverse_order.pop()
             # Drop an edge and ensure the remaining graph is connected
@@ -331,7 +332,7 @@ class GraphCollection():
 
         return MF
 
-    def margin(self):
+    def margin(self, start_time, max_time):
         MF = {"tree": [], "code": [], "freq": []}
 
         for i, Gi in enumerate(self.graphs):
@@ -358,6 +359,9 @@ class GraphCollection():
             # Merfe MF and LF
             print("MERGING...")
             MF = self.merge(MF, LF)
+
+            if time.time() - start_time < max_time:
+                break
 
         for i, freq in enumerate(MF["freq"]):
             MF["freq"][i] = list(set(freq))
