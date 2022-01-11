@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import random
 from data_structure import Cut
-from typing import List, Dict, Tuple, final
+from typing import List, Dict, Tuple
 from gnn_inference import InferenceGNN
 
 def node_match(first_node, second_node):
