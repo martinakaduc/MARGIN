@@ -495,16 +495,22 @@ class MARGIN_GNN:
 
         for _ in range(change_time):
             step_cut = final_cut.copy()
+            chose_edge = None
+            
             while len(list_cand_edge) > 0:
                 chose_edge = random.choice(list_cand_edge)
                 final_cut.pl = step_cut.pl.copy() + [chose_edge]
                 final_cut.pl = list(sorted(final_cut.pl))
                 p_graph = self.edgelist_to_graph(final_cut.pl)
 
-                if nx.is_connected(p_graph) and \
-                   self.support_graph(p_graph) >= self.support_count:
-                    list_cand_edge.remove(chose_edge)
+                if nx.is_connected(p_graph):
                     break
+
+            if self.support_graph(p_graph) >= self.support_count:
+                list_cand_edge.remove(chose_edge)
+            else:
+                final_cut.pl = step_cut.pl.copy()
+                break
 
         final_cut.cl = final_cut.pl
         step_cl = final_cut.cl.copy()
