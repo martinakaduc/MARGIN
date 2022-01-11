@@ -322,6 +322,7 @@ class MARGIN_GNN:
     def expand_cut_random(self, initial: Cut) -> None:
         print("Expanding cut...")
         self.cut_stack.append(initial)
+        self.set_hash_key(initial)
 
         while len(self.cut_stack) > 0:
             curr_cut = self.cut_stack.pop(-1)
@@ -333,18 +334,27 @@ class MARGIN_GNN:
 
             self.num_explored_cut += 1
 
-            self.cut_stack.append(self.get_next_cut(curr_cut))
-            size_cl = len(self.cut_stack[-1].cl)
-            size_pl = len(self.cut_stack[-1].pl)
+            add_cut = self.get_next_cut(curr_cut)
+            if not self.get_hash_key(add_cut):
+                self.set_hash_key(add_cut)
+                self.cut_stack.append(add_cut)
+                size_cl = len(add_cut.cl)
+                size_pl = len(add_cut.pl)
 
-            while size_cl == 0 or \
-                  size_pl == 0 or \
-                  self.metropolis_1(size_pl, len(curr_cut.pl)) == 0:
+                while size_cl == 0 or \
+                    size_pl == 0 or \
+                    self.metropolis_1(size_pl, len(curr_cut.pl)) == 0:
 
-                self.cut_stack.pop(-1)
-                self.cut_stack.append(self.get_next_cut(curr_cut))
-                size_cl = len(self.cut_stack[-1].cl)
-                size_pl = len(self.cut_stack[-1].pl)
+                    self.cut_stack.pop(-1)
+                    add_cut = self.get_next_cut(curr_cut)
+
+                    if not self.get_hash_key(add_cut):
+                        self.set_hash_key(add_cut)
+                        self.cut_stack.append(add_cut)
+                        size_cl = len(add_cut.cl)
+                        size_pl = len(add_cut.pl)
+                    else:
+                        break
 
     def get_next_cut(self, curr: Cut) -> Cut:
         cut_type = np.random.randint(0, self.nextcut_ratio)
@@ -386,6 +396,9 @@ class MARGIN_GNN:
                 break
 
     def get_type_pall(self, curr: Cut) -> Cut:
+        if len(curr.cl) == 0:
+            return Cut()
+
         final_cut = Cut()
         final_cut.cl = curr.cl.copy()
         self.random_one_less_edge(final_cut)
@@ -453,6 +466,9 @@ class MARGIN_GNN:
         return final_cut
 
     def get_type_s1(self, curr: Cut) -> Cut:
+        if len(curr.cl) == 0:
+            return Cut()
+
         final_cut = Cut()
         final_cut.cl = curr.cl.copy()
         self.random_one_less_edge(final_cut)
@@ -496,7 +512,8 @@ class MARGIN_GNN:
         for _ in range(change_time):
             step_cut = final_cut.copy()
             chose_edge = None
-            
+            p_graph = nx.Graph()
+
             while len(list_cand_edge) > 0:
                 chose_edge = random.choice(list_cand_edge)
                 final_cut.pl = step_cut.pl.copy() + [chose_edge]
@@ -506,7 +523,7 @@ class MARGIN_GNN:
                 if nx.is_connected(p_graph):
                     break
 
-            if self.support_graph(p_graph) >= self.support_count:
+            if not nx.classes.function.is_empty(p_graph) and self.support_graph(p_graph) >= self.support_count:
                 list_cand_edge.remove(chose_edge)
             else:
                 final_cut.pl = step_cut.pl.copy()
