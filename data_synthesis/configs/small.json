@@ -1,0 +1,12 @@
+{
+    "number_of_graph": 100,
+    "number_of_pattern": 3,
+    "avg_graph_size": 30,
+    "std_graph_size": 5,
+    "avg_pattern_size": 20,
+    "std_pattern_size": 2,
+    "avg_degree": 3.5,
+    "std_degree": 0.5,
+    "number_label_node": 20,
+    "number_label_edge": 10
+}
