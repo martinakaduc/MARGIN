@@ -280,8 +280,6 @@ class MARGIN_GNN:
 
         while len(self.cut_stack) > 0:
             curr_cut = self.cut_stack.pop(-1)
-            print(curr_cut.pl)
-            self.MF[self.mini_idx].append(curr_cut.pl)
 
             if len(curr_cut.pl) > self.biggest_cut:
                 self.biggest_cut = len(curr_cut.pl)
@@ -291,6 +289,8 @@ class MARGIN_GNN:
 
             for parent in all_parents:
                 if self.support_el(parent) >= self.support_count:
+                    print(parent)
+                    self.MF[self.mini_idx].append(parent)
                     all_children = self.one_more_edge(parent)
 
                     for child in all_children:
