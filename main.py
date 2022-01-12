@@ -42,7 +42,7 @@ def main(args):
     results = margin.run(data)
     margin_time = time.time()
 
-    output_file = os.path.join(args.outdir, os.path.basename(args.dataset))
+    output_file = os.path.join(args.outdir, args.dataset.split("/")[-2] + ".lg")
     write_graphs(results, output_file)
 
     print("Data Reading Time:", data_read_time-start)
