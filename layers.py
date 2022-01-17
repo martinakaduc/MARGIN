@@ -13,7 +13,7 @@ class GAT_gate(torch.nn.Module):
         self.gate = nn.Linear(n_out_feature*2, 1)
         self.leakyrelu = nn.LeakyReLU(0.2)
 
-    def forward(self, x, adj):
+    def forward(self, x, adj, get_attention=False):
         h = self.W(x)
         batch_size = h.size()[0]
         N = h.size()[1]
@@ -29,4 +29,6 @@ class GAT_gate(torch.nn.Module):
        
         coeff = torch.sigmoid(self.gate(torch.cat([x,h_prime], -1))).repeat(1,1,x.size(-1))
         retval = coeff*x+(1-coeff)*h_prime
+        if get_attention:
+            return retval, attention
         return retval
